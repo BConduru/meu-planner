@@ -218,25 +218,31 @@
 }
 
     async function loadFromCloud() {
-        const ind = document.getElementById('cloud-indicator');
-        ind.innerText = "⏳ Carregando...";
-        
-        const local = localStorage.getItem('planner_cloud_v8');
-        if (local) applyData(JSON.parse(local));
+       const ind = document.getElementById('cloud-indicator');
+    ind.innerText = "⏳ A ligar à Nuvem...";
+    
+    // 1. Tenta ler o local para não ficar em branco
+    const local = localStorage.getItem('planner_cloud_v8');
+    if (local) applyData(JSON.parse(local));
 
-        try {
-            const response = await fetch(CLOUD_API_URL);
-            const cloudData = await response.json();
-            if (cloudData && Object.keys(cloudData).length > 0) {
-                applyData(cloudData);
-                localStorage.setItem('planner_cloud_v8', JSON.stringify(cloudData));
-                ind.innerText = "✅ Nuvem Conectada";
-            }
-        } catch (e) {
-            ind.innerText = "⚠️ Modo Local";
+    // 2. Tenta a Nuvem
+    try {
+        const response = await fetch(CLOUD_API_URL);
+        if (!response.ok) throw new Error("Erro na resposta");
+        
+        const cloudData = await response.json();
+        if (cloudData && Object.keys(cloudData).length > 0) {
+            applyData(cloudData);
+            ind.innerText = "✅ Nuvem Conectada";
+            ind.style.backgroundColor = "#2ecc71"; // Verde se ligar
         }
-        atualizarUI();
+    } catch (e) {
+        console.log(e);
+        ind.innerText = "⚠️ Modo Local (Offline)";
+        ind.style.backgroundColor = "#f39c12"; // Laranja se falhar
     }
+    atualizarUI();
+}
 
     function applyData(data) {
         Object.keys(data).forEach(id => {
@@ -328,3 +334,4 @@
 </script>
 </body>
 </html>
+
